@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Box Cricket League — Auction</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:#f0b429;--red:#c0392b;--red-dark:#7b1e14;
+  --green:#1a7f4b;--green-bright:#27ae60;
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--surface3:#22223a;
+  --text:#f0ede8;--text-muted:#8888aa;--border:rgba(240,180,41,0.15);--cyan:#00d4ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+header{background:linear-gradient(135deg,#0a0010,#1a0020,#0a0010);border-bottom:2px solid var(--gold);padding:0 2rem;position:sticky;top:0;z-index:100}
+.header-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:3px;color:var(--gold);text-shadow:0 0 30px rgba(240,180,41,.4)}
+.logo span{color:#fff}
+nav{display:flex;gap:4px}
+nav button{background:transparent;border:1px solid transparent;color:var(--text-muted);padding:8px 20px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;transition:all .2s}
+nav button.active,nav button:hover{border-color:var(--gold);color:var(--gold);background:rgba(240,180,41,.08)}
+.config-btn{background:rgba(240,180,41,.1);border:1px solid var(--gold);color:var(--gold);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px}
+main{max-width:1400px;margin:0 auto;padding:2rem}
+#setup-banner{background:var(--surface2);border:1px solid var(--gold);border-radius:10px;padding:1.5rem;margin-bottom:2rem}
+#setup-banner h3{color:var(--gold);margin-bottom:.75rem;font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:1px}
+.url-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.url-row>div{flex:1;min-width:260px}
+.url-row label{font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px}
+.url-row input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif}
+.url-row input:focus{outline:none;border-color:var(--gold)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.btn-gold{background:var(--gold);color:#000;border:none;padding:10px 24px;border-radius:6px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px}
+.btn-ghost{background:var(--surface3);border:1px solid var(--border);color:var(--text-muted);padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif}
+.hint{font-size:12px;color:var(--text-muted)}
+.hint strong{color:rgba(240,180,41,.7)}
+#status-bar{display:none;gap:8px;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap}
+.status-pill{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid}
+.status-ok{border-color:var(--green-bright);color:var(--green-bright);background:rgba(39,174,96,.08)}
+.status-err{border-color:var(--red);color:#e87070;background:rgba(192,57,43,.08)}
+.status-loading{border-color:var(--cyan);color:var(--cyan);background:rgba(0,212,255,.08)}
+.refresh-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.filters{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.filter-select,.search-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif}
+.search-input{flex:1;min-width:180px}
+.search-input::placeholder{color:var(--text-muted)}
+.filter-select:focus,.search-input:focus{outline:none;border-color:var(--gold)}
+.stats-row{display:flex;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap}
+.stat-chip{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 16px;font-size:13px}
+.stat-chip strong{color:var(--gold)}
+.player-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.player-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s;cursor:pointer}
+.player-card:hover{transform:translateY(-4px) scale(1.02);border-color:rgba(240,180,41,.5);box-shadow:0 8px 32px rgba(240,180,41,.15)}
+.player-card.sold{border-color:rgba(39,174,96,.35)}
+.player-card.unsold{border-color:rgba(192,57,43,.2);opacity:.65}
+.player-img-wrap{position:relative;height:180px;background:var(--surface2);overflow:hidden}
+.player-img-wrap img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.player-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:3.5rem;color:var(--text-muted);background:var(--surface3)}
+.status-badge{position:absolute;top:8px;right:8px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+.badge-sold{background:var(--green);color:#fff}
+.badge-unsold{background:var(--red-dark);color:#fff}
+.badge-available{background:rgba(0,212,255,.15);color:var(--cyan);border:1px solid rgba(0,212,255,.3)}
+.player-info{padding:12px}
+.player-name{font-family:'Bebas Neue',cursive;font-size:1.1rem;letter-spacing:1px;color:#fff;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-village{font-size:11px;color:var(--text-muted);margin-bottom:8px}
+.player-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.tag{font-size:10px;padding:2px 8px;border-radius:3px;font-weight:500}
+.tag-batsman{background:rgba(0,212,255,.12);color:var(--cyan);border:1px solid rgba(0,212,255,.25)}
+.tag-bowler{background:rgba(240,180,41,.12);color:var(--gold);border:1px solid rgba(240,180,41,.25)}
+.tag-allrounder{background:rgba(39,174,96,.12);color:#4fd48a;border:1px solid rgba(39,174,96,.25)}
+.tag-right{background:rgba(255,255,255,.06);color:var(--text-muted);border:1px solid rgba(255,255,255,.08)}
+.tag-left{background:rgba(160,100,240,.12);color:#c084fc;border:1px solid rgba(160,100,240,.25)}
+.player-footer{border-top:1px solid var(--border);padding:8px 12px;display:flex;justify-content:space-between;align-items:center}
+.price-label{font-size:10px;color:var(--text-muted)}
+.price-val{font-size:13px;font-weight:600;color:var(--gold)}
+.team-label{font-size:11px;color:var(--green-bright);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+/* TEAMS */
+.teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+.team-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.team-header{background:linear-gradient(135deg,var(--surface2),var(--surface3));padding:16px 20px;border-bottom:1px solid var(--border)}
+.team-name{font-family:'Bebas Neue',cursive;font-size:1.4rem;letter-spacing:2px;color:var(--gold);margin-bottom:10px}
+.team-stats-row{display:flex;gap:12px}
+.team-stat{flex:1;background:rgba(0,0,0,.3);border-radius:8px;padding:10px;text-align:center}
+.team-stat-val{font-family:'Bebas Neue',cursive;font-size:1.5rem;color:#fff}
+.team-stat-val.green{color:var(--green-bright)}.team-stat-val.gold{color:var(--gold)}.team-stat-val.red{color:#e87070}
+.team-stat-label{font-size:10px;color:var(--text-muted);margin-top:2px}
+.pts-bar-wrap{margin-top:10px;background:rgba(0,0,0,.4);border-radius:4px;height:6px;overflow:hidden}
+.pts-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gold),#ff9f00);transition:width .6s ease}
+.team-players{padding:12px 20px 16px}
+.team-players-title{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.team-player-list{display:flex;flex-direction:column;gap:6px}
+.team-player-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);font-size:12px;cursor:pointer;transition:border-color .2s}
+.team-player-item:hover{border-color:rgba(240,180,41,.4)}
+.tp-avatar{width:28px;height:28px;border-radius:50%;background:var(--surface3);overflow:hidden;flex-shrink:0}
+.tp-avatar img{width:100%;height:100%;object-fit:cover;object-position:top}
+.tp-avatar-ini{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text-muted)}
+.team-player-name{flex:1;font-weight:500}
+.team-player-price{color:var(--gold);font-size:11px}
+.team-empty{color:var(--text-muted);font-size:13px;text-align:center;padding:1rem}
+/* SPOTLIGHT */
+#spotlight-overlay{display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;overflow:hidden}
+#spotlight-overlay.open{display:flex}
+.sp-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(40,0,70,.97) 0%,rgba(5,0,15,.99) 65%);animation:bgPulse 4s ease-in-out infinite}
+@keyframes bgPulse{0%,100%{opacity:1}50%{opacity:.9}}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(0.7)}}
+.sp-rays{position:absolute;inset:0;background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,rgba(240,180,41,.05) 8deg,transparent 18deg,transparent 170deg,rgba(240,180,41,.05) 178deg,transparent 188deg,transparent 350deg,rgba(240,180,41,.05) 358deg,transparent 360deg);animation:raysSpin 14s linear infinite}
+@keyframes raysSpin{to{transform:rotate(360deg)}}
+.sp-scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.03) 3px,rgba(0,0,0,.03) 4px);pointer-events:none;opacity:.4}
+.sp-particles{position:absolute;inset:0;pointer-events:none}
+.sp-particle{position:absolute;border-radius:50%;background:var(--gold);opacity:0;animation:pfly 3s ease-out infinite}
+@keyframes pfly{0%{transform:translateY(0) scale(1);opacity:0}20%{opacity:.9}100%{transform:translateY(-140px) translateX(var(--dx)) scale(0);opacity:0}}
+.sp-close{position:absolute;top:20px;right:24px;z-index:10;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:#fff;width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.sp-close:hover{background:rgba(240,180,41,.2);border-color:var(--gold);color:var(--gold)}
+.sp-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:10;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.sp-nav:hover{background:rgba(240,180,41,.15);border-color:var(--gold)}
+#sp-prev{left:16px}#sp-next{right:16px}
+.sp-card{position:relative;z-index:5;display:flex;background:var(--surface);border:2px solid var(--gold);border-radius:20px;overflow:hidden;max-width:800px;width:92vw;max-height:92vh;box-shadow:0 0 80px rgba(240,180,41,.25),0 0 160px rgba(240,180,41,.08);animation:cardIn .5s cubic-bezier(.175,.885,.32,1.275) forwards;opacity:0}
+@keyframes cardIn{0%{transform:scale(.25) rotateY(-25deg);opacity:0}60%{transform:scale(1.05) rotateY(2deg);opacity:1}100%{transform:scale(1) rotateY(0);opacity:1}}
+@keyframes cardOut{to{transform:scale(.35) rotateY(20deg);opacity:0}}
+.sp-photo{width:280px;min-width:280px;position:relative;overflow:hidden;background:var(--surface2);display:flex;align-items:center;justify-content:center}
+.sp-photo img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.sp-photo-ph{font-family:'Bebas Neue',cursive;font-size:5.5rem;color:var(--text-muted)}
+.sp-photo-glow{position:absolute;inset:0;background:linear-gradient(to right,transparent 55%,var(--surface) 100%)}
+.sp-photo-btm{position:absolute;bottom:0;left:0;right:0;height:35%;background:linear-gradient(to top,var(--surface) 0%,transparent 100%)}
+.sp-info{flex:1;padding:1.75rem 1.75rem 1.5rem;display:flex;flex-direction:column;gap:0;overflow-y:auto}
+.sp-ev{font-family:'Bebas Neue',cursive;font-size:.7rem;letter-spacing:4px;color:var(--gold);opacity:.7;margin-bottom:.4rem;animation:fsi .4s .3s both}
+.sp-name{font-family:'Bebas Neue',cursive;font-size:2.5rem;line-height:1;letter-spacing:2px;color:#fff;text-shadow:0 0 40px rgba(240,180,41,.3);margin-bottom:.25rem;animation:fsi .4s .4s both}
+.sp-loc{font-size:13px;color:var(--text-muted);margin-bottom:1.1rem;animation:fsi .4s .45s both}
+.sp-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.1rem;animation:fsi .4s .5s both}
+.sp-tag{font-size:12px;padding:5px 14px;border-radius:20px;font-weight:600}
+.sp-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:1.1rem;animation:fsi .4s .52s both}
+.sp-stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.sp-stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.sp-stat-val{font-family:'Bebas Neue',cursive;font-size:1.25rem;color:#fff}
+.sp-stat-val.gold{color:var(--gold)}.sp-stat-val.cyan{color:var(--cyan)}.sp-stat-val.green{color:var(--green-bright)}
+.sp-bid{background:linear-gradient(135deg,rgba(240,180,41,.1),rgba(240,180,41,.03));border:1px solid rgba(240,180,41,.35);border-radius:12px;padding:14px 16px;margin-bottom:1rem;animation:fsi .4s .56s both}
+.sp-bid-label{font-size:11px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.sp-bid-amount{font-family:'Bebas Neue',cursive;font-size:3rem;color:var(--gold);line-height:1;text-shadow:0 0 30px rgba(240,180,41,.5);animation:pricePop .5s .75s both}
+@keyframes pricePop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.sp-team-badge{display:flex;align-items:center;gap:8px;margin-bottom:.9rem;animation:fsi .4s .6s both}
+.sp-team-dot{width:10px;height:10px;border-radius:50%;background:var(--green-bright);flex-shrink:0;box-shadow:0 0 8px var(--green-bright)}
+.sp-team-name{font-size:14px;color:var(--green-bright);font-weight:600}
+.sp-bottom{margin-top:auto;padding-top:.9rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;animation:fsi .4s .65s both}
+.sp-big-badge{font-family:'Bebas Neue',cursive;font-size:1.5rem;letter-spacing:3px;padding:6px 20px;border-radius:8px}
+.sp-sold-badge{background:var(--green);color:#fff;box-shadow:0 0 20px rgba(39,174,96,.4)}
+.sp-unsold-badge{background:var(--red-dark);color:#fff}
+.sp-avail-badge{background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid var(--cyan)}
+.sp-regid{font-size:12px;color:var(--text-muted)}
+/* confetti */
+.confetti{position:absolute;border-radius:2px;opacity:0;z-index:6;animation:cfall var(--dur) var(--del) ease-in forwards}
+@keyframes cfall{0%{transform:translateY(-30px) rotate(0deg);opacity:1}100%{transform:translateY(120vh) rotate(var(--spin));opacity:0}}
+@keyframes fsi{0%{transform:translateX(-18px);opacity:0}100%{transform:translateX(0);opacity:1}}
+/* CONFIG MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--gold);border-radius:16px;padding:2rem;max-width:480px;width:90%}
+.modal h2{font-family:'Bebas Neue',cursive;letter-spacing:2px;font-size:1.5rem;color:var(--gold);margin-bottom:1.2rem}
+.modal label{font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;margin-top:12px}
+.modal input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:6px;font-size:14px;font-family:'DM Sans',sans-serif}
+.modal input:focus{outline:none;border-color:var(--gold)}
+.modal-btns{display:flex;gap:10px;margin-top:1.5rem}
+.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:10px 20px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.empty-state{text-align:center;padding:4rem;color:var(--text-muted);font-size:15px}
+@media(max-width:640px){
+  main{padding:1rem}
+  .header-inner{flex-wrap:wrap;height:auto;padding:10px 0;gap:6px}
+  .player-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  .teams-grid{grid-template-columns:1fr}
+  .sp-card{flex-direction:column;max-height:95vh}
+  .sp-photo{width:100%;min-width:unset;height:220px}
+  .sp-photo-glow{background:linear-gradient(to bottom,transparent 55%,var(--surface) 100%)}
+  #sp-prev{left:6px}#sp-next{right:6px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">BCL<span>-3</span></div>
+    <nav>
+      <button class="active" onclick="switchTab('players',this)">Players</button>
+      <button onclick="switchTab('teams',this)">Teams</button>
+    </nav>
+    <button class="config-btn" onclick="openConfig()">⚙ Configure</button>
+  </div>
+</header>
+
+<main>
+  <div id="setup-banner">
+    <h3>Connect Your Google Sheet</h3>
+    <div class="url-row">
+      <div>
+        <label>Players Sheet CSV URL</label>
+        <input type="text" id="players-url" placeholder="File → Share → Publish to web → CSV" />
+      </div>
+      <div>
+        <label>Teams Sheet CSV URL (optional — auto-calculated if blank)</label>
+        <input type="text" id="teams-url" placeholder="Optional" />
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-gold" onclick="connectSheets()">Load Data</button>
+      <button class="btn-ghost" onclick="loadDemo()">Load Demo Data</button>
+    </div>
+    <p class="hint">Players columns: <strong>Name, Photo, Style, Hand, Team, Village, BasePrice, SoldPrice, Status, Current_Team</strong><br>
+    <strong>Team</strong> = auction/bought-by team. <strong>Current_Team</strong> = player's existing club (shown as info only).<br>
+    For Google Drive photos: use <strong>imgbb.com</strong> or <strong>postimages.org</strong> to host images (Google Drive blocks cross-origin loads).<br>
+    If using Google Drive, the site will attempt the thumbnail trick automatically.</p>
+  </div>
+
+  <div id="status-bar">
+    <span id="status-pill" class="status-pill status-loading">Loading...</span>
+    <button class="refresh-btn" onclick="refreshData()">↻ Refresh</button>
+    <span id="last-updated" style="font-size:12px;color:var(--text-muted)"></span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--green-bright);margin-left:4px"><span id="live-dot" style="width:7px;height:7px;border-radius:50%;background:var(--green-bright);display:inline-block;animation:livepulse 1.5s infinite"></span>LIVE · 10s</span>
+  </div>
+
+  <div id="tab-players" class="tab-content active">
+    <div class="filters">
+      <input type="text" class="search-input" placeholder="Search player or village..." id="search-input" oninput="filterPlayers()" />
+      <select class="filter-select" id="filter-status" onchange="filterPlayers()">
+        <option value="">All Status</option>
+        <option value="sold">Sold</option>
+        <option value="unsold">Unsold</option>
+        <option value="available">Available</option>
+      </select>
+      <select class="filter-select" id="filter-style" onchange="filterPlayers()">
+        <option value="">All Styles</option>
+        <option value="batsman">Batsman</option>
+        <option value="bowler">Bowler</option>
+        <option value="all-rounder">All-Rounder</option>
+      </select>
+      <select class="filter-select" id="filter-team" onchange="filterPlayers()">
+        <option value="">All Teams</option>
+      </select>
+    </div>
+    <div class="stats-row" id="player-stats"></div>
+    <div id="players-container"><div class="empty-state">Connect your Google Sheet above or load demo data.</div></div>
+  </div>
+
+  <div id="tab-teams" class="tab-content">
+    <div id="teams-container"><div class="empty-state">Connect your Google Sheet above or load demo data.</div></div>
+  </div>
+</main>
+
+<!-- SPOTLIGHT OVERLAY -->
+<div id="spotlight-overlay" onclick="overlayClick(event)">
+  <div class="sp-bg"></div>
+  <div class="sp-rays"></div>
+  <div class="sp-scan"></div>
+  <div class="sp-particles" id="sp-particles"></div>
+  <button class="sp-close" onclick="closeSpotlight()">✕</button>
+  <button class="sp-nav" id="sp-prev" onclick="navSpotlight(-1)">‹</button>
+  <button class="sp-nav" id="sp-next" onclick="navSpotlight(1)">›</button>
+  <div class="sp-card" id="sp-card" onclick="event.stopPropagation()"></div>
+</div>
+
+<!-- Config Modal -->
+<div class="modal-overlay" id="config-modal">
+  <div class="modal">
+    <h2>Configure Sheets</h2>
+    <label>Players CSV URL</label>
+    <input type="text" id="modal-players-url" />
+    <label>Teams CSV URL (optional)</label>
+    <input type="text" id="modal-teams-url" />
+    <div class="modal-btns">
+      <button class="btn-gold" onclick="saveConfig()">Save & Reload</button>
+      <button class="btn-cancel" onclick="closeConfig()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MAX_PTS=200000,MAX_PL=13,MIN_BID=2000;
+let allPlayers=[],allTeams=[];
+let playersUrl='https://docs.google.com/spreadsheets/d/e/2PACX-1vRaroi9w_rKs8L3rac_Qh0iLV7XuQ2JVGGFP6zuiaevMl6lvu5-P3WOPp5jvW_wWLSb5-Gb-JnZ0fgz/pub?output=csv';
+let teamsUrl='https://docs.google.com/spreadsheets/d/e/2PACX-1vRDNKxA9Umf8jF2FDXuRsqkFffsCuQ3bNY45rg9NH1C6R_q4LIm8BXUpeFzAJUDc2B3F1j-YeSqkAay/pub?output=csv';
+if(playersUrl)document.getElementById('players-url').value=playersUrl;
+if(teamsUrl)document.getElementById('teams-url').value=teamsUrl;
+
+/* IMAGE PROXY */
+function proxyImg(url){
+  if(!url)return'';
+  const m=url.match(/(?:\/d\/|id=|open\?id=)([a-zA-Z0-9_-]{20,})/);
+  if(m)return'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w400';
+  return url;
+}
+function imgHtml(photo,name,cls){
+  const ini=initials(name);
+  const ph='<div class="'+(cls||'player-img-ph')+'">'+ini+'</div>';
+  if(!photo)return ph;
+  const safeName=name.replace(/'/g,"\'");
+  const safeCls=(cls||'player-img-ph').replace(/'/g,"\'");
+  return'<img src="'+photo+'" alt="'+name+'" loading="lazy" onerror="imgFallback(this,\''+safeName+'\',\''+safeCls+'\')" />';
+}
+const fallbacks={};
+function imgFallback(el,name,cls){
+  const src=el.src||'';
+  const m=src.match(/[?&]id=([a-zA-Z0-9_-]{20,})/)||src.match(/\/d\/([a-zA-Z0-9_-]{20,})/);
+  const id=m&&m[1];
+  if(id){
+    const tried=fallbacks[id]||0;
+    fallbacks[id]=tried+1;
+    if(tried===0){el.src='https://lh3.googleusercontent.com/d/'+id+'=w400';return;}
+    if(tried===1){el.src='https://drive.google.com/thumbnail?id='+id+'&sz=w400';return;}
+    if(tried===2){el.src='https://drive.google.com/uc?export=view&id='+id;return;}
+  }
+  el.parentNode.innerHTML='<div class="'+cls+'">'+initials(name)+'</div>';
+}
+
+/* TAB */
+function switchTab(tab,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* CONFIG */
+function openConfig(){document.getElementById('modal-players-url').value=playersUrl;document.getElementById('modal-teams-url').value=teamsUrl;document.getElementById('config-modal').classList.add('open')}
+function closeConfig(){document.getElementById('config-modal').classList.remove('open')}
+function saveConfig(){
+  playersUrl=document.getElementById('modal-players-url').value.trim();
+  teamsUrl=document.getElementById('modal-teams-url').value.trim();
+  localStorage.setItem('bcl_purl',playersUrl);localStorage.setItem('bcl_turl',teamsUrl);
+  closeConfig();if(playersUrl)loadData();
+}
+function connectSheets(){
+  playersUrl=document.getElementById('players-url').value.trim();
+  teamsUrl=document.getElementById('teams-url').value.trim();
+  if(!playersUrl){alert('Please enter Players CSV URL');return}
+  localStorage.setItem('bcl_purl',playersUrl);localStorage.setItem('bcl_turl',teamsUrl);
+  loadData();
+}
+
+/* CSV */
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  if(lines.length<2)return[];
+  const headers=parseRow(lines[0]);
+  return lines.slice(1).filter(l=>l.trim()).map(line=>{
+    const vals=parseRow(line);const obj={};
+    headers.forEach((h,i)=>{obj[h.trim().toLowerCase().replace(/\s+/g,'_')]=(vals[i]||'').trim()});
+    return obj;
+  });
+}
+function parseRow(line){
+  const r=[];let q=false,cur='';
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'&&!q){q=true;continue}
+    if(c==='"'&&q&&line[i+1]==='"'){cur+='"';i++;continue}
+    if(c==='"'&&q){q=false;continue}
+    if(c===','&&!q){r.push(cur);cur='';continue}
+    cur+=c;
+  }
+  r.push(cur);return r;
+}
+
+/* NORMALIZE */
+function normStatus(s){
+  const sl=(s||'').toLowerCase().trim();
+  if(!sl||sl.startsWith('avail')||sl==='pending'||sl==='onnum ila'||sl==='')return'available';
+  if(sl==='unsold'||sl.startsWith('unsold'))return'unsold';
+  if(sl==='sold'||sl.startsWith('sold'))return'sold';
+  return'available';
+}
+function normPlayer(row){
+  const rawPhoto=row.photo||row.image||row.photo_url||row.pic||'';
+  return{
+    name:row.name||row.player_name||'Player',
+    photo:proxyImg(rawPhoto),
+    style:row.style||row.player_style||row.type||row.role||'Batsman',
+    hand:row.hand||row.batting||'',
+    team:row.team||row.auction_team||row.auctionteam||row.soldteam||row.sold_team||'',
+    currentTeam:row.currentteam||row.current_team||row.currentTeam||row.club||row.existing_team||row.previousteam||row.prev_team||'',
+    village:row.village||row.area||row.location||row.place||'',
+    basePrice:parseInt(row.baseprice||row.base_price||'2000')||MIN_BID,
+    soldPrice:parseInt(row.soldprice||row.sold_price||row.price||row.bid||'0')||0,
+    status:normStatus(row.status),
+    regid:row['regis._id']||row.reg_id||row.id||''
+  };
+}
+function normTeam(row){
+  return{name:row.teamname||row.team_name||row.team||row.name||'',totalPoints:parseInt(row.totalpoints||row.total_points||row.points||'200000')||MAX_PTS,spent:parseInt(row.pointsspent||row.spent||row.used||'0')||0,playerCount:parseInt(row.playercount||row.players||'0')||0};
+}
+function computeTeams(players){
+  const map={};
+  players.forEach(p=>{
+    if(!p.team)return;
+    const k=p.team.trim().toLowerCase();
+    if(!map[k])map[k]={name:p.team,totalPoints:MAX_PTS,spent:0,playerCount:0};
+    if(p.status==='sold'){map[k].spent+=(p.soldPrice||p.basePrice||MIN_BID);map[k].playerCount++}
+  });
+  return Object.values(map);
+}
+
+/* LOAD */
+function setStatus(msg,type){
+  const bar=document.getElementById('status-bar');
+  bar.style.display='flex';
+  const pill=document.getElementById('status-pill');
+  pill.textContent=msg;pill.className='status-pill status-'+type;
+}
+async function fetchCSV(url){
+  const r=await fetch(url,{cache:'no-cache'});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.text();
+}
+async function loadData(){
+  if(!playersUrl)return;
+  setStatus('Loading...','loading');
+  try{
+    const csv=await fetchCSV(playersUrl);
+    const rows=parseCSV(csv);
+    allPlayers=rows.map(normPlayer).filter(p=>p.name&&p.name!=='Player');
+    if(teamsUrl){try{const tc=await fetchCSV(teamsUrl);allTeams=parseCSV(tc).map(normTeam).filter(t=>t.name)}catch{allTeams=[]}}
+    if(!allTeams.length)allTeams=computeTeams(allPlayers);
+    setStatus('✓ '+allPlayers.length+' players loaded','ok');
+    let lastFetch=Date.now();
+    document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
+    clearInterval(window._tickInterval);
+    window._tickInterval=setInterval(()=>{
+      const sec=Math.round((Date.now()-lastFetch)/1000);
+      document.getElementById('last-updated').textContent=sec<5?'Just updated':'Updated '+sec+'s ago';
+    },1000);
+    document.getElementById('setup-banner').style.display='none';
+    renderPlayers();renderTeams();populateTeamFilter();
+  }catch(e){setStatus('Error: '+e.message,'err');console.error(e)}
+}
+function refreshData(){loadData()}
+
+/* FILTERS */
+function populateTeamFilter(){
+  const sel=document.getElementById('filter-team');
+  const teams=[...new Set(allPlayers.map(p=>p.team).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">All Teams</option>';
+  teams.forEach(t=>sel.innerHTML+=`<option value="${t.toLowerCase()}">${t}</option>`);
+}
+function filterPlayers(){
+  const s=document.getElementById('search-input').value.toLowerCase();
+  const st=document.getElementById('filter-status').value;
+  const sy=document.getElementById('filter-style').value.toLowerCase();
+  const tm=document.getElementById('filter-team').value.toLowerCase();
+  window._fp=allPlayers.filter(p=>{
+    const ms=!s||p.name.toLowerCase().includes(s)||(p.village||'').toLowerCase().includes(s);
+    const mst=!st||p.status===st;
+    const msy=!sy||p.style.toLowerCase().includes(sy);
+    const mt=!tm||(p.team||'').toLowerCase().includes(tm);
+    return ms&&mst&&msy&&mt;
+  });
+  renderGrid(window._fp);
+}
+
+/* HELPERS */
+function fmtPts(n){return Number(n||0).toLocaleString('en-IN')}
+function styleC(s){const sl=(s||'').toLowerCase();if(sl.includes('all')||sl.includes('round'))return'allrounder';if(sl.includes('bowl'))return'bowler';return'batsman'}
+function handC(h){return(h||'').toLowerCase().includes('left')?'left':'right'}
+function initials(name){return(name||'').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+
+/* RENDER PLAYERS */
+function renderPlayers(){
+  const sold=allPlayers.filter(p=>p.status==='sold').length;
+  const unsold=allPlayers.filter(p=>p.status==='unsold').length;
+  document.getElementById('player-stats').innerHTML=`
+    <div class="stat-chip">Total: <strong>${allPlayers.length}</strong></div>
+    <div class="stat-chip">Sold: <strong style="color:var(--green-bright)">${sold}</strong></div>
+    <div class="stat-chip">Available: <strong style="color:var(--cyan)">${allPlayers.length-sold-unsold}</strong></div>
+    <div class="stat-chip">Unsold: <strong style="color:#e87070">${unsold}</strong></div>`;
+  window._fp=allPlayers;
+  filterPlayers();
+}
+function renderGrid(players){
+  const c=document.getElementById('players-container');
+  if(!players.length){c.innerHTML='<div class="empty-state">No players match the filter.</div>';return}
+  c.innerHTML=`<div class="player-grid">${players.map((p,i)=>{
+    const idx=allPlayers.indexOf(p);
+    const bc=p.status==='sold'?'badge-sold':p.status==='unsold'?'badge-unsold':'badge-available';
+    const bt=p.status==='sold'?'SOLD':p.status==='unsold'?'UNSOLD':'AVAILABLE';
+    const pl=p.status==='sold'?'Sold for':'Base';
+    const pv=p.status==='sold'?fmtPts(p.soldPrice||p.basePrice):fmtPts(p.basePrice);
+    return`<div class="player-card ${p.status}" onclick="openSpotlight(${idx})">
+      <div class="player-img-wrap">${imgHtml(p.photo,p.name,'player-img-ph')}<span class="status-badge ${bc}">${bt}</span></div>
+      <div class="player-info">
+        <div class="player-name" title="${p.name}">${p.name}</div>
+        ${p.village?`<div class="player-village">📍 ${p.village}</div>`:''}
+        <div class="player-tags">
+          <span class="tag tag-${styleC(p.style)}">${p.style}</span>
+          ${p.hand?`<span class="tag tag-${handC(p.hand)}">${p.hand}</span>`:''}
+        </div>
+      </div>
+      <div class="player-footer">
+        <div><div class="price-label">${pl}</div><div class="price-val">₹${pv}</div></div>
+        <div style="text-align:right">
+          ${p.team&&p.status==='sold'?`<div class="team-label" title="${p.team}">${p.team}</div>`:''}
+          ${p.currentTeam?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px" title="Current Club">🏏 ${p.currentTeam}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+/* RENDER TEAMS */
+function renderTeams(){
+  const c=document.getElementById('teams-container');
+  if(!allTeams.length){c.innerHTML='<div class="empty-state">No team data.</div>';return}
+  c.innerHTML=`<div class="teams-grid">${allTeams.map(team=>{
+    const rem=team.totalPoints-team.spent;
+    const pct=Math.min(100,Math.round(team.spent/team.totalPoints*100));
+    const slots=MAX_PL-team.playerCount;
+    const pc=rem<20000?'red':rem<60000?'gold':'green';
+    const tps=allPlayers.filter(p=>p.status==='sold'&&p.team&&p.team.trim().toLowerCase()===team.name.trim().toLowerCase());
+    const plist=tps.length?tps.map(p=>{
+      const idx=allPlayers.indexOf(p);
+      const ini=initials(p.name);
+      const av=p.photo?`<img src="${p.photo}" onerror="this.parentNode.innerHTML='<div class=tp-avatar-ini>${ini}</div>'" />`:`<div class="tp-avatar-ini">${ini}</div>`;
+      return`<div class="team-player-item" onclick="openSpotlight(${idx})"><div class="tp-avatar">${av}</div><div class="team-player-name">${p.name}</div><div class="team-player-price">₹${fmtPts(p.soldPrice||p.basePrice)}</div></div>`;
+    }).join(''):'<div class="team-empty">No players yet</div>';
+    return`<div class="team-card">
+      <div class="team-header">
+        <div class="team-name">${team.name}</div>
+        <div class="team-stats-row">
+          <div class="team-stat"><div class="team-stat-val ${pc}">₹${fmtPts(rem)}</div><div class="team-stat-label">Points Left</div></div>
+          <div class="team-stat"><div class="team-stat-val">${team.playerCount}/${MAX_PL}</div><div class="team-stat-label">Players</div></div>
+          <div class="team-stat"><div class="team-stat-val gold">${slots}</div><div class="team-stat-label">Slots Left</div></div>
+        </div>
+        <div class="pts-bar-wrap"><div class="pts-bar" style="width:${pct}%"></div></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${pct}% points used</div>
+      </div>
+      <div class="team-players"><div class="team-players-title">Squad</div><div class="team-player-list">${plist}</div></div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+/* ============ SPOTLIGHT ============ */
+let spIdx=-1;
+
+function openSpotlight(idx){
+  spIdx=idx;
+  const p=allPlayers[idx];
+  if(!p)return;
+  const card=document.getElementById('sp-card');
+  card.style.animation='none';card.offsetHeight;
+  card.style.animation='cardIn .5s cubic-bezier(.175,.885,.32,1.275) forwards';
+
+  // confetti for sold
+  let confettiHtml='';
+  if(p.status==='sold'){
+    const cols=['#f0b429','#27ae60','#00d4ff','#ff6b6b','#fff','#c084fc','#ff9f00'];
+    for(let i=0;i<35;i++){
+      const col=cols[i%cols.length];
+      const left=Math.random()*100;
+      const delay=(Math.random()*2).toFixed(2);
+      const dur=(1.2+Math.random()*1.2).toFixed(2);
+      const spin=(360+Math.random()*720).toFixed(0);
+      const w=6+Math.random()*7,h=10+Math.random()*9;
+      confettiHtml+=`<div class="confetti" style="left:${left}%;background:${col};width:${w}px;height:${h}px;--dur:${dur}s;--del:${delay}s;--spin:${spin}deg;transform:rotate(${Math.random()*360}deg)"></div>`;
+    }
+  }
+
+  const st=p.status;
+  const bClass=st==='sold'?'sp-sold-badge':st==='unsold'?'sp-unsold-badge':'sp-avail-badge';
+  const bText=st==='sold'?'SOLD':st==='unsold'?'UNSOLD':'ON AUCTION';
+  const sc=styleC(p.style);
+
+  const photo=p.photo
+    ?`<img src="${p.photo}" alt="${p.name}" onerror="imgFallback(this,'${p.name}','sp-photo-ph')" />`
+    :`<div class="sp-photo-ph">${initials(p.name)}</div>`;
+
+  card.innerHTML=`
+    ${confettiHtml}
+    <div class="sp-photo">${photo}<div class="sp-photo-glow"></div><div class="sp-photo-btm"></div></div>
+    <div class="sp-info">
+      <div class="sp-ev">JCAF · Box Cricket League 3</div>
+      <div class="sp-name">${p.name}</div>
+      ${p.village?`<div class="sp-loc">📍 ${p.village}</div>`:''}
+      <div class="sp-tags">
+        <span class="sp-tag tag-${sc}">${p.style||'Batsman'}</span>
+        ${p.hand?`<span class="sp-tag tag-${handC(p.hand)}">${p.hand} Hand</span>`:''}
+      </div>
+      <div class="sp-stats">
+        <div class="sp-stat-box"><div class="sp-stat-label">Role</div><div class="sp-stat-val cyan">${p.style||'—'}</div></div>
+        <div class="sp-stat-box"><div class="sp-stat-label">Batting</div><div class="sp-stat-val">${p.hand||'Right'}</div></div>
+        <div class="sp-stat-box"><div class="sp-stat-label">Base Price</div><div class="sp-stat-val gold">₹${fmtPts(p.basePrice)}</div></div>
+        <div class="sp-stat-box"><div class="sp-stat-label">${p.regid?'Reg. ID':'Village'}</div><div class="sp-stat-val" style="font-size:1.1rem">${p.regid||p.village||'—'}</div></div>
+      </div>
+      ${st==='sold'&&p.soldPrice?`<div class="sp-bid"><div class="sp-bid-label">Final Bid Amount</div><div class="sp-bid-amount">₹${fmtPts(p.soldPrice)}</div></div>`:''}
+      ${p.currentTeam?`<div style="margin:10px 0;padding:8px 14px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:8px"><span style="color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-size:10px">Current Club</span><div style="color:var(--cyan);font-weight:600;margin-top:3px">🏏 ${p.currentTeam}</div></div>`:""}
+      ${p.team&&st==='sold'?`<div class="sp-team-badge"><div class="sp-team-dot"></div><div class="sp-team-name">${p.team}</div></div>`:''}
+      <div class="sp-bottom">
+        <div class="sp-big-badge ${bClass}">${bText}</div>
+        ${p.regid?`<div class="sp-regid">ID: ${p.regid}</div>`:''}
+      </div>
+    </div>`;
+
+  spawnParticles();
+  document.getElementById('spotlight-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function spawnParticles(){
+  const pc=document.getElementById('sp-particles');pc.innerHTML='';
+  for(let i=0;i<24;i++){
+    const el=document.createElement('div');el.className='sp-particle';
+    const sz=2+Math.random()*5;
+    el.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;bottom:${Math.random()*25}%;--dx:${(Math.random()-.5)*130}px;animation-delay:${(Math.random()*2.5).toFixed(2)}s;animation-duration:${(2+Math.random()*2).toFixed(2)}s`;
+    pc.appendChild(el);
+  }
+}
+
+function closeSpotlight(){
+  const ov=document.getElementById('spotlight-overlay');
+  const card=document.getElementById('sp-card');
+  card.style.animation='cardOut .28s ease-in forwards';
+  setTimeout(()=>{ov.classList.remove('open');card.style.animation='';document.body.style.overflow=''},260);
+}
+function overlayClick(e){if(e.target===e.currentTarget||e.target.classList.contains('sp-bg'))closeSpotlight()}
+function navSpotlight(dir){
+  const next=(spIdx+dir+allPlayers.length)%allPlayers.length;
+  openSpotlight(next);
+}
+
+document.addEventListener('keydown',e=>{
+  const ov=document.getElementById('spotlight-overlay');
+  if(!ov.classList.contains('open'))return;
+  if(e.key==='Escape')closeSpotlight();
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')navSpotlight(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')navSpotlight(-1);
+});
+
+/* DEMO */
+function loadDemo(){
+  allPlayers=[
+    {name:'Steefan',photo:'',style:'All-Rounder',hand:'Right',team:'Tiger Boys',village:'Vengaipuram',basePrice:2000,soldPrice:5000,status:'sold',regid:'1'},
+    {name:'AB De Soori',photo:'',style:'All-Rounder',hand:'Right',team:'Koraiyar Brothers',village:'Thannerkunnam',basePrice:2000,soldPrice:8000,status:'sold',regid:'2'},
+    {name:'Murali',photo:'',style:'All-Rounder',hand:'Right',team:'KORAIYAR',village:'Ayyampettai',basePrice:2000,soldPrice:6000,status:'sold',regid:'3'},
+    {name:'Sirajudeen',photo:'',style:'All-Rounder',hand:'Right',team:'Lakshmangudi Friends',village:'Lakshmangudi',basePrice:2000,soldPrice:7000,status:'sold',regid:'4'},
+    {name:'GaneshKumar',photo:'',style:'All-Rounder',hand:'Right',team:'Airlines',village:'Kottagacheri',basePrice:2000,soldPrice:4000,status:'sold',regid:'5'},
+    {name:'Madhan',photo:'',style:'All-Rounder',hand:'Right',team:'VCR Riders',village:'Vanchiyur',basePrice:2000,soldPrice:3000,status:'sold',regid:'6'},
+    {name:'Bharani',photo:'',style:'All-Rounder',hand:'Right',team:'TKM Boys',village:'Thanneerkunnam',basePrice:2000,soldPrice:5500,status:'sold',regid:'7'},
+    {name:'Ragul A',photo:'',style:'All-Rounder',hand:'Right',team:'KCC Kambangudi',village:'Kambangudi',basePrice:2000,soldPrice:9000,status:'sold',regid:'8'},
+    {name:'Dhiva',photo:'',style:'Batsman',hand:'Left',team:'RFC',village:'Thanneerkunnam',basePrice:2000,soldPrice:4500,status:'sold',regid:'9'},
+    {name:'Fido',photo:'',style:'Batsman',hand:'Right',team:'',village:'Vanjuyr',basePrice:2000,soldPrice:0,status:'unsold',regid:'10'},
+    {name:'Akash',photo:'',style:'Batsman',hand:'Right',team:"No Fear's",village:'Mudhalsethi',basePrice:2000,soldPrice:3500,status:'sold',regid:'11'},
+    {name:'Muthukumaran',photo:'',style:'All-Rounder',hand:'Right',team:'Lkd Koraiyar',village:'Koothanallur',basePrice:2000,soldPrice:6000,status:'sold',regid:'12'},
+    {name:'Veeramani G',photo:'',style:'Batsman',hand:'Left',team:'Storm Boys',village:'Karuvakulam',basePrice:2000,soldPrice:7000,status:'sold',regid:'13'},
+    {name:'Mani',photo:'',style:'All-Rounder',hand:'Right',team:'LKD',village:'Koothanallur',basePrice:2000,soldPrice:4000,status:'sold',regid:'14'},
+    {name:'Naganathan B',photo:'',style:'All-Rounder',hand:'Right',team:'Airlines',village:'Pamani',basePrice:2000,soldPrice:5000,status:'sold',regid:'15'},
+    {name:'Parth Sanghavi',photo:'',style:'Batsman',hand:'Right',team:'',village:'',basePrice:2000,soldPrice:0,status:'available',regid:'21'},
+  ];
+  allTeams=computeTeams(allPlayers);
+  document.getElementById('setup-banner').style.display='none';
+  setStatus('✓ Demo: '+allPlayers.length+' players — click any card!','ok');
+  document.getElementById('last-updated').textContent='Demo data loaded';
+  renderPlayers();renderTeams();populateTeamFilter();
+}
+
+if(playersUrl){document.getElementById('setup-banner').style.display='none';loadData();}
+setInterval(()=>{if(playersUrl)loadData()},10000);
+</script>
+</body>
+</html>
